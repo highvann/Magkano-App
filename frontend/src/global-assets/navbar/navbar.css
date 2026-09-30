@@ -1,0 +1,163 @@
+/* Navbar.css - Vertical Sidebar Restored */
+
+.global-navbar {
+  display: flex;
+  flex-direction: column;
+  width: 260px; /* Restores the fixed vertical column width */
+  min-width: 260px;
+  height: 100vh; /* Re-stretches to the bottom of the screen */
+  background: var(--surface-matte);
+  border-right: 1px solid var(--border-light);
+  padding: 32px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  box-sizing: border-box;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 48px;
+  padding-left: 8px;
+}
+
+.brand-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  box-shadow: 0 0 12px var(--accent-primary);
+}
+
+.navbar-brand h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.navbar-links {
+  display: flex;
+  flex-direction: column; /* Stacks the links vertically again */
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+}
+
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.nav-item:hover {
+  color: var(--text-main);
+  background: var(--input-bg);
+  border-color: var(--border-light);
+}
+
+.nav-item:hover .nav-icon {
+  transform: translateX(4px); /* Pushes icon slightly right on hover */
+  color: var(--text-main);
+}
+
+.nav-item.active {
+  color: var(--accent-primary);
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+}
+
+.nav-item.active .nav-icon {
+  color: var(--accent-primary);
+}
+/* Navbar User & Settings Footer */
+.navbar-user-footer {
+  margin-top: auto; /* Pushes the entire block to the absolute bottom of the navbar */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: transparent;
+  transition: background 0.2s ease;
+}
+
+.navbar-user-footer:hover {
+  background: rgba(255, 255, 255, 0.05); /* Subtle hover effect for the whole row */
+}
+
+.nav-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  flex: 1; 
+}
+
+.nav-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  color: var(--text-inverse);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.nav-user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-user-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.nav-user-role {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.nav-settings-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.nav-settings-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.1); /* Circular hover effect for the gear icon */
+}

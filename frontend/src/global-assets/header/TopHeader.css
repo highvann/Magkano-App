@@ -1,0 +1,198 @@
+/* TopHeader.css - Adaptive Light/Dark Theme */
+.top-header {
+  height: 80px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+  background: var(--surface-matte);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-light);
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* --- Search Bar --- */
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: var(--input-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 10px 16px;
+  width: 400px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-bar:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--border-glow);
+}
+
+.search-icon {
+  margin-right: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+}
+
+.search-bar input {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  width: 100%;
+  outline: none;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.search-bar input::placeholder {
+  color: var(--text-muted);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* --- Premium Theme Toggle --- */
+.btn-theme-toggle {
+  background: var(--input-bg);
+  border: 1px solid var(--border-light);
+  padding: 8px 16px;
+  border-radius: 20px;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.05);
+  font-family: inherit;
+}
+
+.btn-theme-toggle:hover {
+  background: var(--surface-matte-hover);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  transform: translateY(-1px);
+}
+
+/* --- Live Clock --- */
+.live-clock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--input-bg);
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-light);
+}
+
+.clock-time {
+  font-weight: 700;
+  color: var(--text-main);
+  font-size: 0.9rem;
+}
+
+.clock-date {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-left: 1px solid var(--border-light);
+  padding-left: 8px;
+}
+
+/* --- Action Icons --- */
+.icon-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.header-icon-btn {
+  background: var(--input-bg);
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.header-icon-btn:hover {
+  color: var(--text-main);
+  background: var(--surface-matte-hover);
+  border-color: var(--accent-primary);
+  transform: scale(1.05);
+}
+
+.header-divider {
+  height: 30px;
+  width: 1px;
+  background: var(--border-light);
+  margin: 0 4px;
+}
+
+/* --- User Profile --- */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 12px;
+  transition: background 0.2s;
+  border: 1px solid transparent;
+}
+
+.user-profile:hover {
+  background: var(--input-bg);
+  border-color: var(--border-light);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.user-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.user-plan {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--accent-primary);
+  letter-spacing: 1px;
+}
+
+.user-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--border-light);
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
