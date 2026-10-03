@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'; // Trigger Vercel build
 import { supabase } from './supabaseClient';
 import Navbar from './global-assets/navbar/navbar';
 import TopHeader from './global-assets/header/TopHeader';
