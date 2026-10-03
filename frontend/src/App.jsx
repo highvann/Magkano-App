@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
-import Navbar from './global-assets/navbar/Navbar';
+import Navbar from './global-assets/navbar/navbar';
 import TopHeader from './global-assets/header/TopHeader';
 import ExpenseTracker from './modules/expenses/ExpenseTracker';
-import Dashboard from './modules/dashboard/Dashboard';
+import Dashboard from './modules/dashboard/dashboard';
 import GoalsTracker from './modules/goals/GoalsTracker'; 
 import History from './modules/history/History';
 import Analytics from './modules/analytics/Analytics';
