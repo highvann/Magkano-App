@@ -86,9 +86,9 @@ function GoalsTracker() {
   const fetchDashboardData = async () => {
     try {
       const [expRes, setRes, goalsRes] = await Promise.all([
-        fetch('http://localhost:5000/expenses'),
-        fetch('http://localhost:5000/settings'),
-        fetch('http://localhost:5000/goals')
+        fetch(`${import.meta.env.VITE_API_URL}/expenses`),
+        fetch(`${import.meta.env.VITE_API_URL}/settings`),
+        fetch(`${import.meta.env.VITE_API_URL}/goals`)
       ]);
 
       if (expRes.ok && setRes.ok) {
@@ -111,7 +111,7 @@ function GoalsTracker() {
     if (!title || !targetAmount || !targetDate) return;
 
     try {
-      const response = await fetch('http://localhost:5000/goals', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/goals`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -173,7 +173,7 @@ function GoalsTracker() {
     setTimeout(() => setToast({ show: false, message: '' }), 3500);
 
     try {
-      await fetch(`http://localhost:5000/goals/${selectedGoal.id}`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/goals/${selectedGoal.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -184,7 +184,7 @@ function GoalsTracker() {
         })
       });
 
-      await fetch('http://localhost:5000/expenses', {
+      await fetch(`${import.meta.env.VITE_API_URL}/expenses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -210,7 +210,7 @@ function GoalsTracker() {
 
   const executeDeleteGoal = async () => {
     try {
-      await fetch(`http://localhost:5000/goals/${deleteConfirm.goalId}`, { method: 'DELETE' });
+      await fetch(`${import.meta.env.VITE_API_URL}/goals/${deleteConfirm.goalId}`, { method: 'DELETE' });
       setDeleteConfirm({ show: false, goalId: null, title: '' });
       setSelectedGoal(null);
       fetchDashboardData();
@@ -246,7 +246,7 @@ function GoalsTracker() {
     setShowAdjustModal(false);
 
     try {
-      const response = await fetch(`http://localhost:5000/goals/${selectedGoal.id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/goals/${selectedGoal.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

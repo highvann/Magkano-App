@@ -66,9 +66,9 @@ function Dashboard({ setActiveTab, userProfile }) {
     setError(null);
     try {
       const [expRes, setRes, goalsRes] = await Promise.all([
-        fetch('http://localhost:5000/expenses'),
-        fetch('http://localhost:5000/settings'),
-        fetch('http://localhost:5000/goals')
+        fetch(`${import.meta.env.VITE_API_URL}/expenses`),
+        fetch(`${import.meta.env.VITE_API_URL}/settings`),
+        fetch(`${import.meta.env.VITE_API_URL}/goals`)
       ]);
 
       if (!expRes.ok || !setRes.ok || !goalsRes.ok) {

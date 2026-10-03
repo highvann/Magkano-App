@@ -35,7 +35,7 @@ function History() {
 
   const fetchHistory = async () => {
     try {
-      const response = await fetch('http://localhost:5000/expenses');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/expenses`);
       if (response.ok) {
         const data = await response.json();
         
@@ -118,7 +118,7 @@ function History() {
     setIsEditingNote(false);
 
     try {
-      await fetch(`http://localhost:5000/expenses/${selectedTx.id}`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/expenses/${selectedTx.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedTx)
@@ -221,7 +221,7 @@ function History() {
       {showReceiptModal && selectedTx && (
         <div className="fullscreen-overlay" onClick={() => setShowReceiptModal(false)}>
           <div className="fullscreen-image-wrapper">
-             <img src={`http://localhost:5000${selectedTx.receipt_url}`} alt="Receipt Fullscreen" />
+             <img src={`${import.meta.env.VITE_API_URL}${selectedTx.receipt_url}`} alt="Receipt Fullscreen" />
              <button className="close-fullscreen">✕</button>
           </div>
         </div>
@@ -405,7 +405,7 @@ function History() {
                   {selectedTx.receipt_url ? (
                     <>
                       <img 
-                        src={`http://localhost:5000${selectedTx.receipt_url}`} 
+                        src={`${import.meta.env.VITE_API_URL}${selectedTx.receipt_url}`} 
                         alt="Transaction Receipt" 
                         className="receipt-image-bg" 
                       />

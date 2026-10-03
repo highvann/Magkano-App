@@ -30,12 +30,12 @@ function ExpenseTracker({ setActiveTab }) {
 
   const fetchAllData = async () => {
     try {
-      const expRes = await fetch('http://localhost:5000/expenses');
+      const expRes = await fetch(`${import.meta.env.VITE_API_URL}/expenses`);
       if (expRes.ok) {
          const expData = await expRes.json();
          setExpenses(Array.isArray(expData) ? expData : []);
       }
-      const setRes = await fetch('http://localhost:5000/settings');
+      const setRes = await fetch(`${import.meta.env.VITE_API_URL}/settings`);
       if (setRes.ok) {
         const setData = await setRes.json();
         const currentBase = Number(setData.base_balance);
@@ -91,7 +91,7 @@ function ExpenseTracker({ setActiveTab }) {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/expenses', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/expenses`, {
         method: 'POST',
         body: formData,
       });
@@ -117,7 +117,7 @@ function ExpenseTracker({ setActiveTab }) {
 
   const confirmUpdateBase = async () => {
     try {
-      const response = await fetch('http://localhost:5000/settings', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/settings`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ base_balance: baseInput })
@@ -135,7 +135,7 @@ function ExpenseTracker({ setActiveTab }) {
   const confirmAddFunds = async () => {
     if (!addFundsInput) return;
     try {
-      const response = await fetch('http://localhost:5000/settings/add', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/settings/add`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ add_amount: parseFloat(addFundsInput) })

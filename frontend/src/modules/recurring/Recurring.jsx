@@ -4,7 +4,7 @@ import './Recurring.css';
 const getNextBillingInfo = (sub) => {
   const initDateStr = sub.original_date || sub.created_at || sub.date;
   const initDate = new Date(initDateStr);
-  
+
   const nextDueDate = new Date(sub.date);
   nextDueDate.setHours(0, 0, 0, 0);
 
@@ -16,7 +16,7 @@ const getNextBillingInfo = (sub) => {
       initDate,
       nextDueDate: null,
       daysLeft: '-',
-      statusTag: { text: "PAUSED", urgent: false, isToday: false, isPaused: true, colorCode: "#f59e0b" } 
+      statusTag: { text: "PAUSED", urgent: false, isToday: false, isPaused: true, colorCode: "#f59e0b" }
     };
   }
 
@@ -25,13 +25,13 @@ const getNextBillingInfo = (sub) => {
   const daysLeft = Math.max(0, daysLeftRaw);
 
   let statusTag = { text: `${daysLeft} Days Left`, urgent: false, isToday: false, colorCode: "var(--text-muted)" };
-  
+
   if (daysLeftRaw <= 0) {
-    statusTag = { text: "DUE TODAY", urgent: true, isToday: true, colorCode: "var(--alert-red)" }; 
+    statusTag = { text: "DUE TODAY", urgent: true, isToday: true, colorCode: "var(--alert-red)" };
   } else if (daysLeft === 1 || daysLeft === 2) {
-    statusTag = { text: `DUE IN ${daysLeft} DAYS`, urgent: true, isToday: false, colorCode: "#f97316" }; 
+    statusTag = { text: `DUE IN ${daysLeft} DAYS`, urgent: true, isToday: false, colorCode: "#f97316" };
   } else if (daysLeft === 3) {
-    statusTag = { text: "DUE IN 3 DAYS", urgent: true, isToday: false, colorCode: "#eab308" }; 
+    statusTag = { text: "DUE IN 3 DAYS", urgent: true, isToday: false, colorCode: "#eab308" };
   }
 
   return { initDate, nextDueDate, daysLeft, statusTag };
@@ -66,7 +66,7 @@ function Recurring() {
 
   const fetchSubscriptions = async () => {
     try {
-      const response = await fetch('http://localhost:5000/expenses');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/expenses`);
       if (response.ok) {
         const data = await response.json();
         const recurringData = data.filter(exp => exp.isrecurring === true || String(exp.isRecurring) === 'true');
@@ -85,8 +85,8 @@ function Recurring() {
       description: merchant,
       amount: amount,
       category: category,
-      date: billingDate, 
-      original_date: billingDate, 
+      date: billingDate,
+      original_date: billingDate,
       created_at: new Date().toISOString(),
       isRecurring: true,
       isrecurring: true,
@@ -94,7 +94,7 @@ function Recurring() {
     };
 
     try {
-      const response = await fetch('http://localhost:5000/expenses', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/expenses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newSub),
@@ -115,7 +115,7 @@ function Recurring() {
       const exactTimeStr = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
       const currentDate = new Date(sub.date);
-      currentDate.setMonth(currentDate.getMonth() + 1); 
+      currentDate.setMonth(currentDate.getMonth() + 1);
       const yyyy = currentDate.getFullYear();
       const mm = String(currentDate.getMonth() + 1).padStart(2, '0');
       const dd = String(currentDate.getDate()).padStart(2, '0');
@@ -123,26 +123,26 @@ function Recurring() {
 
       const updatedSub = { ...sub, date: newDateStr, isrecurring: true, isRecurring: true };
 
-      setSelectedSub(null); 
+      setSelectedSub(null);
       sessionStorage.removeItem('openSubscriptionId');
       setSubscriptions(prev => prev.map(s => s.id === sub.id ? updatedSub : s));
 
       setToast({ show: true, message: `Successfully paid ₱${Number(sub.amount).toLocaleString()} for ${sub.description}.`, stage: 'entering' });
-      setTimeout(() => setToast(prev => ({ ...prev, stage: 'entered' })), 50); 
-      setTimeout(() => setToast(prev => ({ ...prev, stage: 'exiting' })), 3000); 
-      setTimeout(() => setToast({ show: false, message: '', stage: 'hidden' }), 3600); 
+      setTimeout(() => setToast(prev => ({ ...prev, stage: 'entered' })), 50);
+      setTimeout(() => setToast(prev => ({ ...prev, stage: 'exiting' })), 3000);
+      setTimeout(() => setToast({ show: false, message: '', stage: 'hidden' }), 3600);
 
       const paymentData = {
         description: `${sub.description} (Sub Payment - ${exactTimeStr})`,
         amount: sub.amount,
         category: sub.category,
-        date: new Date().toISOString().split('T')[0], 
-        created_at: new Date().toISOString(), 
+        date: new Date().toISOString().split('T')[0],
+        created_at: new Date().toISOString(),
         isrecurring: false,
-        isRecurring: false 
+        isRecurring: false
       };
 
-      await fetch('http://localhost:5000/expenses', {
+      await fetch(`${import.meta.env.VITE_API_URL}/expenses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(paymentData)
@@ -150,7 +150,7 @@ function Recurring() {
 
       await new Promise(resolve => setTimeout(resolve, 250));
 
-      await fetch(`http://localhost:5000/expenses/${sub.id}`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/expenses/${sub.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedSub)
@@ -168,19 +168,19 @@ function Recurring() {
     try {
       const updatedData = { ...sub, isPaused: toPause };
       if (!toPause) {
-        updatedData.date = new Date().toISOString().split('T')[0]; 
+        updatedData.date = new Date().toISOString().split('T')[0];
       }
 
       setSubscriptions(prev => prev.map(s => s.id === sub.id ? { ...s, ...updatedData } : s));
       setSelectedSub(prev => prev?.id === sub.id ? { ...prev, ...updatedData } : prev);
       setPauseModal({ show: false, sub: null });
 
-      await fetch(`http://localhost:5000/expenses/${sub.id}`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/expenses/${sub.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedData)
       });
-      
+
     } catch (error) {
       console.error("Error pausing/unpausing:", error);
     }
@@ -192,7 +192,7 @@ function Recurring() {
       setSelectedSub(null);
       setCancelModal({ show: false, sub: null });
 
-      await fetch(`http://localhost:5000/expenses/${id}`, { method: 'DELETE' });
+      await fetch(`${import.meta.env.VITE_API_URL}/expenses/${id}`, { method: 'DELETE' });
     } catch (error) {
       console.error("Error deleting subscription:", error);
     }
@@ -225,11 +225,11 @@ function Recurring() {
 
   return (
     <div className={`wf-recurring-canvas ${selectedSub ? 'panel-open' : ''}`}>
-      
+
       {/* Toast strictly uses CSS classes now */}
       <div className={`recurring-toast toast-${toast.stage}`}>
-        <span style={{display:'flex'}}><IconCheck /></span> 
-        <span className="font-bold" style={{fontSize: '0.95rem'}}>{toast.message}</span>
+        <span style={{ display: 'flex' }}><IconCheck /></span>
+        <span className="font-bold" style={{ fontSize: '0.95rem' }}>{toast.message}</span>
       </div>
 
       {pauseModal.show && pauseModal.sub && (
@@ -239,7 +239,7 @@ function Recurring() {
             <p className="modal-text mb-large">You are about to pause automation for <strong>{pauseModal.sub.description}</strong>. It will stop calculating remaining days. When you unpause, the cycle will restart on that exact day.</p>
             <div className="modal-actions">
               <button type="button" className="btn-secondary" onClick={() => setPauseModal({ show: false, sub: null })}>Go Back</button>
-              <button type="button" className="btn-primary" style={{flex: 1, justifyContent: 'center', background: '#f59e0b', borderColor: '#f59e0b', color: '#fff'}} onClick={(e) => executePauseToggle(e, pauseModal.sub, true)}>Confirm Pause</button>
+              <button type="button" className="btn-primary" style={{ flex: 1, justifyContent: 'center', background: '#f59e0b', borderColor: '#f59e0b', color: '#fff' }} onClick={(e) => executePauseToggle(e, pauseModal.sub, true)}>Confirm Pause</button>
             </div>
           </div>
         </div>
@@ -251,8 +251,8 @@ function Recurring() {
             <h3 className="modal-title mb-xs text-white">Cancel Subscription?</h3>
             <p className="modal-text mb-large">Are you sure you want to permanently delete <strong>{cancelModal.sub.description}</strong>? If you just need a break, you can pause it instead to keep the record.</p>
             <div className="modal-actions">
-              <button type="button" className="btn-secondary" style={{borderColor: '#f59e0b', color: '#f59e0b'}} onClick={(e) => { setCancelModal({ show: false, sub: null }); executePauseToggle(e, cancelModal.sub, true); }}>Pause Instead</button>
-              <button type="button" className="btn-danger" style={{flex: 1}} onClick={() => executeCancel(cancelModal.sub.id)}>Cancel Permanently</button>
+              <button type="button" className="btn-secondary" style={{ borderColor: '#f59e0b', color: '#f59e0b' }} onClick={(e) => { setCancelModal({ show: false, sub: null }); executePauseToggle(e, cancelModal.sub, true); }}>Pause Instead</button>
+              <button type="button" className="btn-danger" style={{ flex: 1 }} onClick={() => executeCancel(cancelModal.sub.id)}>Cancel Permanently</button>
             </div>
           </div>
         </div>
@@ -296,13 +296,13 @@ function Recurring() {
           <div className="dash-matte-card kpi-card">
             <div className="icon-box-modern text-primary mb-xs"><IconSync /></div>
             <p className="dash-sm-label">MONTHLY FIXED OUTFLOW</p>
-            <h2 className="dash-md-amount text-primary">₱{totalMonthly.toLocaleString(undefined, {minimumFractionDigits: 2})}</h2>
+            <h2 className="dash-md-amount text-primary">₱{totalMonthly.toLocaleString(undefined, { minimumFractionDigits: 2 })}</h2>
           </div>
-          
+
           <div className="dash-matte-card kpi-card">
             <div className="icon-box-modern text-secondary mb-xs"><IconShield /></div>
             <p className="dash-sm-label">ANNUALIZED COMMITMENT</p>
-            <h2 className="dash-md-amount">₱{annualizedCommitment.toLocaleString(undefined, {minimumFractionDigits: 2})}</h2>
+            <h2 className="dash-md-amount">₱{annualizedCommitment.toLocaleString(undefined, { minimumFractionDigits: 2 })}</h2>
           </div>
 
           <div className="dash-matte-card kpi-card">
@@ -311,7 +311,7 @@ function Recurring() {
             {nextCharge ? (
               <>
                 <h2 className="dash-md-amount truncate-text">{nextCharge.description}</h2>
-                <p className="dash-xs-text m-0 mt-xs font-bold" style={{color: '#f97316'}}>₱{Number(nextCharge.amount).toLocaleString()} due in {nextCharge.daysLeft} days</p>
+                <p className="dash-xs-text m-0 mt-xs font-bold" style={{ color: '#f97316' }}>₱{Number(nextCharge.amount).toLocaleString()} due in {nextCharge.daysLeft} days</p>
               </>
             ) : (
               <h2 className="dash-md-amount text-muted">No Data</h2>
@@ -346,10 +346,10 @@ function Recurring() {
                     const { nextDueDate, statusTag } = getNextBillingInfo(sub);
                     const isPaused = sub.isPaused || String(sub.isPaused) === 'true';
                     const isSelected = selectedSub?.id === sub.id;
-                    
+
                     return (
-                      <tr 
-                        key={sub.id} 
+                      <tr
+                        key={sub.id}
                         className={`clickable-row ${isSelected ? 'selected' : ''}`}
                         onClick={() => setSelectedSub(sub)}
                       >
@@ -358,32 +358,32 @@ function Recurring() {
                             <div className="icon-box-dark ledger-box">
                               <IconRepeat />
                             </div>
-                            <span style={{fontSize: '0.95rem'}}>{sub.description}</span>
+                            <span style={{ fontSize: '0.95rem' }}>{sub.description}</span>
                           </div>
                         </td>
                         <td className="align-left">
-                          <span className="dash-xs-text text-muted font-bold" style={{textTransform: 'uppercase'}}>Monthly</span>
+                          <span className="dash-xs-text text-muted font-bold" style={{ textTransform: 'uppercase' }}>Monthly</span>
                         </td>
                         <td className="align-left">
-                          <span className={`dash-xs-text font-bold ${isPaused ? 'text-muted' : 'text-main'}`} style={{textTransform: 'uppercase'}}>
+                          <span className={`dash-xs-text font-bold ${isPaused ? 'text-muted' : 'text-main'}`} style={{ textTransform: 'uppercase' }}>
                             {nextDueDate ? nextDueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Suspended'}
                           </span>
                         </td>
                         <td className="align-center">
                           {statusTag.urgent || isPaused ? (
                             <span className="status-pill live-pill" style={{
-                              background: isPaused ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239,68,68,0.15)', 
-                              color: statusTag.colorCode, 
+                              background: isPaused ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239,68,68,0.15)',
+                              color: statusTag.colorCode,
                               border: `1px solid ${statusTag.colorCode}40`
                             }}>
-                              {statusTag.urgent && <span style={{display: 'flex', marginRight: '4px'}}><IconAlert /></span>} {statusTag.text}
+                              {statusTag.urgent && <span style={{ display: 'flex', marginRight: '4px' }}><IconAlert /></span>} {statusTag.text}
                             </span>
                           ) : (
                             <span className="status-pill active-pill">Active</span>
                           )}
                         </td>
-                        <td className={`align-right font-bold ${isPaused ? 'text-muted' : 'text-primary'}`} style={{fontSize: '1.05rem'}}>
-                          -₱{Number(sub.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                        <td className={`align-right font-bold ${isPaused ? 'text-muted' : 'text-primary'}`} style={{ fontSize: '1.05rem' }}>
+                          -₱{Number(sub.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </td>
                       </tr>
                     );
@@ -409,25 +409,25 @@ function Recurring() {
 
               <div className="panel-content-scroll custom-scrollbar">
                 <div className="panel-hero align-left mb-large">
-                  <h2 className={`hero-amount-text ${isPaused ? 'text-muted' : 'text-main'}`} style={{fontSize: '2.2rem', margin: '0 0 8px 0'}}>{selectedSub.description}</h2>
+                  <h2 className={`hero-amount-text ${isPaused ? 'text-muted' : 'text-main'}`} style={{ fontSize: '2.2rem', margin: '0 0 8px 0' }}>{selectedSub.description}</h2>
                   <div className="flex-align gap-sm">
-                    <p className={`dash-sm-label font-bold m-0 ${isPaused ? 'text-muted' : 'text-primary'}`}>₱{Number(selectedSub.amount).toLocaleString(undefined, {minimumFractionDigits: 2})} / Month</p>
+                    <p className={`dash-sm-label font-bold m-0 ${isPaused ? 'text-muted' : 'text-primary'}`}>₱{Number(selectedSub.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })} / Month</p>
                   </div>
                 </div>
 
                 {daysLeft === 0 && !isPaused && (
-                  <div className="dash-matte-card p-normal rounded-lg mb-large" style={{background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.3)'}}>
+                  <div className="dash-matte-card p-normal rounded-lg mb-large" style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
                     <h3 className="text-alert m-0 mb-xs flex-align gap-sm"><IconCheck /> Billing Date Reached</h3>
                     <p className="dash-xs-text text-muted mb-normal">Has this subscription been paid? Mark it as paid to log the transaction and calculate the next rollover date.</p>
-                    <button className="btn-primary w-full" onClick={(e) => handleMarkAsPaid(e, selectedSub)} style={{background: 'var(--alert-red)', color: '#fff', justifyContent: 'center'}}>
+                    <button className="btn-primary w-full" onClick={(e) => handleMarkAsPaid(e, selectedSub)} style={{ background: 'var(--alert-red)', color: '#fff', justifyContent: 'center' }}>
                       Mark as Paid & Roll Cycle
                     </button>
                   </div>
                 )}
 
-                <div className="dash-matte-card p-normal rounded-lg mb-normal" style={{padding: '20px', background: 'var(--input-bg)'}}>
+                <div className="dash-matte-card p-normal rounded-lg mb-normal" style={{ padding: '20px', background: 'var(--input-bg)' }}>
                   <span className="mono-label-sm mb-normal display-block">BILLING TIMELINE</span>
-                  
+
                   <div className="flex-between mb-sm">
                     <span className="dash-xs-text text-muted font-bold">INITIATED DATE</span>
                     <span className="dash-xs-text text-white font-bold">{initDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
@@ -442,35 +442,35 @@ function Recurring() {
 
                   <div className="flex-between">
                     <span className="dash-xs-text text-muted font-bold">DAYS REMAINING</span>
-                    <span className={`dash-xs-text font-bold`} style={{color: statusTag.colorCode}}>{daysLeft} {daysLeft !== '-' && 'Days'}</span>
+                    <span className={`dash-xs-text font-bold`} style={{ color: statusTag.colorCode }}>{daysLeft} {daysLeft !== '-' && 'Days'}</span>
                   </div>
                 </div>
 
-                <div className="dash-matte-card p-normal rounded-lg mb-normal" style={{padding: '20px', background: 'var(--input-bg)'}}>
+                <div className="dash-matte-card p-normal rounded-lg mb-normal" style={{ padding: '20px', background: 'var(--input-bg)' }}>
                   <div className="flex-align gap-sm mb-xs">
-                    <span className={`icon-xs ${isPaused ? 'text-muted' : 'text-primary'}`} style={{display:'flex'}}><IconSync /></span>
+                    <span className={`icon-xs ${isPaused ? 'text-muted' : 'text-primary'}`} style={{ display: 'flex' }}><IconSync /></span>
                     <span className="mono-label-sm m-0">ANNUAL OVERHEAD ESTIMATE</span>
                   </div>
-                  <h2 className={`dash-md-amount mt-xs ${isPaused ? 'text-muted' : 'text-main'}`} style={{fontSize: '1.8rem'}}>₱{(Number(selectedSub.amount) * 12).toLocaleString(undefined, {minimumFractionDigits: 2})}</h2>
+                  <h2 className={`dash-md-amount mt-xs ${isPaused ? 'text-muted' : 'text-main'}`} style={{ fontSize: '1.8rem' }}>₱{(Number(selectedSub.amount) * 12).toLocaleString(undefined, { minimumFractionDigits: 2 })}</h2>
                   <p className="dash-xs-text text-muted m-0 mt-xs">Calculated over 12 billing cycles</p>
                 </div>
 
-                <div className="dash-matte-card p-normal rounded-lg mb-normal" style={{padding: '20px', background: 'var(--input-bg)'}}>
+                <div className="dash-matte-card p-normal rounded-lg mb-normal" style={{ padding: '20px', background: 'var(--input-bg)' }}>
                   <span className="mono-label-sm mb-normal display-block">CONTROL CENTER</span>
-                  
+
                   <div className="action-stack mt-normal">
                     {isPaused ? (
-                      <button className="btn-primary w-full mb-normal flex-align gap-sm" style={{justifyContent: 'center'}} onClick={(e) => executePauseToggle(e, selectedSub, false)}>
-                        <span className="icon-small" style={{display:'flex'}}><IconPlay /></span> Unpause & Restart Cycle
+                      <button className="btn-primary w-full mb-normal flex-align gap-sm" style={{ justifyContent: 'center' }} onClick={(e) => executePauseToggle(e, selectedSub, false)}>
+                        <span className="icon-small" style={{ display: 'flex' }}><IconPlay /></span> Unpause & Restart Cycle
                       </button>
                     ) : (
-                      <button className="btn-secondary w-full mb-normal flex-align gap-sm" style={{justifyContent: 'center'}} onClick={() => setPauseModal({ show: true, sub: selectedSub })}>
-                        <span className="icon-small" style={{display:'flex'}}><IconPause /></span> Pause Tracker
+                      <button className="btn-secondary w-full mb-normal flex-align gap-sm" style={{ justifyContent: 'center' }} onClick={() => setPauseModal({ show: true, sub: selectedSub })}>
+                        <span className="icon-small" style={{ display: 'flex' }}><IconPause /></span> Pause Tracker
                       </button>
                     )}
-                    
-                    <button className="btn-action-danger w-full mt-xs flex-align gap-sm" style={{justifyContent: 'center'}} onClick={() => setCancelModal({ show: true, sub: selectedSub })}>
-                      <span className="icon-small" style={{display:'flex'}}><IconClose /></span> Cancel Subscription
+
+                    <button className="btn-action-danger w-full mt-xs flex-align gap-sm" style={{ justifyContent: 'center' }} onClick={() => setCancelModal({ show: true, sub: selectedSub })}>
+                      <span className="icon-small" style={{ display: 'flex' }}><IconClose /></span> Cancel Subscription
                     </button>
                   </div>
                 </div>
