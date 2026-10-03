@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import './Dashboard.css';
+import './dashboard.css';
 
 const getNextBillingInfo = (sub) => {
   const initDateStr = sub.date;
