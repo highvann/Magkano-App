@@ -4,7 +4,7 @@ const { Pool } = require('pg');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-require('dotenv').config(); 
+require('dotenv').config();
 
 // 1. IMPORT GEMINI SDK
 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -21,36 +21,39 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Set up the PostgreSQL Connection Pool
 const pool = new Pool({
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    database: process.env.DB_DATABASE
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
+
 
 // Test the Database Connection
 pool.connect((err, client, release) => {
-    if (err) {
-        console.error('Error connecting to PostgreSQL:', err.stack);
-    } else {
-        console.log('Connected to PostgreSQL successfully!');
-        release();
-    }
-});
-
-// Configure Multer storage for receipt images
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const dir = './uploads';
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-    cb(null, dir);
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
+  if (err) {
+    console.error('Error connecting to PostgreSQL:', err.stack);
+  } else {
+    console.log('Connected to PostgreSQL successfully!');
+    release();
   }
 });
-const upload = multer({ storage: storage });
 
+// Configure Cloudinary storage for receipt images
+const { v2: cloudinary } = require('cloudinary');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'magkano_receipts', // Folder name in Cloudinary
+    allowed_formats: ['jpg', 'png', 'jpeg', 'pdf'],
+  },
+});
+const upload = multer({ storage: storage });
 
 // ==========================================
 // AI CHATBOT ROUTE
@@ -89,6 +92,28 @@ app.post('/api/chat', async (req, res) => {
 
 
 // ==========================================
+// AUTH ROUTES
+// ==========================================
+
+app.post('/api/auth/send-otp', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    // TODO: generate OTP, send via email/SMS, store it, etc.
+    const otp = Math.floor(100000 + Math.random() * 900000); // simple 6-digit code
+
+    // placeholder response - replace with your actual sending logic
+    console.log(`Generated OTP for ${email}: ${otp}`);
+    res.json({ message: 'OTP sent', otp });   // remove OTP from response in prod
+  } catch (err) {
+    console.error('OTP error:', err);
+    res.status(500).json({ error: 'Failed to send OTP' });
+  }
+});
+
+
+// ==========================================
 // API ROUTES (Transactions)
 // ==========================================
 
@@ -96,8 +121,7 @@ app.post('/api/chat', async (req, res) => {
 app.post('/expenses', upload.single('receipt'), async (req, res) => {
   try {
     const { description, amount, category, date, isRecurring, notes, paymentMethod } = req.body;
-    const receipt_url = req.file ? `/uploads/${req.file.filename}` : null;
-
+    const receipt_url = req.file ? req.file.path : null; // Cloudinary returns the full URL in req.file.path
     const newExpense = await pool.query(
       "INSERT INTO transactions (description, amount, category, date, isRecurring, notes, receipt_url, paymentMethod) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
       [description, amount, category, date, isRecurring === 'true', notes, receipt_url, paymentMethod]
@@ -111,13 +135,13 @@ app.post('/expenses', upload.single('receipt'), async (req, res) => {
 
 // 2. GET ALL EXPENSES (GET)
 app.get('/expenses', async (req, res) => {
-    try {
-        const allExpenses = await pool.query("SELECT * FROM transactions ORDER BY date DESC");
-        res.json(allExpenses.rows);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send("Server Error");
-    }
+  try {
+    const allExpenses = await pool.query("SELECT * FROM transactions ORDER BY date DESC");
+    res.json(allExpenses.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
 });
 
 // 3. UPDATE EXPENSE (PUT) - Patched to include isPaused
@@ -125,7 +149,7 @@ app.put('/expenses/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { description, amount, category, date, isRecurring, notes, paymentMethod, isPaused } = req.body;
-    
+
     // COALESCE ensures we only update the provided fields without breaking existing data
     const updateQuery = await pool.query(
       `UPDATE transactions 
@@ -144,7 +168,7 @@ app.put('/expenses/:id', async (req, res) => {
     if (updateQuery.rows.length === 0) {
       return res.status(404).json({ error: "Transaction not found" });
     }
-    
+
     res.json(updateQuery.rows[0]);
   } catch (err) {
     console.error("Error updating transaction:", err.message);
@@ -175,7 +199,7 @@ app.get('/settings', async (req, res) => {
 app.put('/settings', async (req, res) => {
   try {
     const { base_balance } = req.body;
-    
+
     const result = await pool.query(
       'UPDATE settings SET base_balance = $1 WHERE id = 1 RETURNING *',
       [base_balance]
@@ -200,7 +224,7 @@ app.put('/settings', async (req, res) => {
 app.put('/settings/add', async (req, res) => {
   try {
     const { add_amount } = req.body;
-    
+
     const result = await pool.query(
       'UPDATE settings SET base_balance = base_balance + $1 WHERE id = 1 RETURNING *',
       [add_amount]
@@ -227,79 +251,79 @@ app.put('/settings/add', async (req, res) => {
 
 // GET: Fetch all goals
 app.get('/goals', async (req, res) => {
-    try {
-        const allGoals = await pool.query("SELECT * FROM goals ORDER BY target_date ASC");
-        res.json(allGoals.rows);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send("Server Error");
-    }
+  try {
+    const allGoals = await pool.query("SELECT * FROM goals ORDER BY target_date ASC");
+    res.json(allGoals.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
 });
 
 // POST: Create a new goal
 app.post('/goals', async (req, res) => {
-    try {
-        const { title, target_amount, target_date } = req.body;
-        const newGoal = await pool.query(
-            "INSERT INTO goals (title, target_amount, target_date) VALUES ($1, $2, $3) RETURNING *",
-            [title, target_amount, target_date]
-        );
-        res.json(newGoal.rows[0]);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send("Server Error");
-    }
+  try {
+    const { title, target_amount, target_date } = req.body;
+    const newGoal = await pool.query(
+      "INSERT INTO goals (title, target_amount, target_date) VALUES ($1, $2, $3) RETURNING *",
+      [title, target_amount, target_date]
+    );
+    res.json(newGoal.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
 });
 
 // PUT (Full Update): Required for "Adjust Timeline" and overriding saved amounts
 app.put('/goals/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { title, target_amount, target_date, saved_amount } = req.body;
+  try {
+    const { id } = req.params;
+    const { title, target_amount, target_date, saved_amount } = req.body;
 
-        const updatedGoal = await pool.query(
-            "UPDATE goals SET title = $1, target_amount = $2, target_date = $3, saved_amount = $4 WHERE id = $5 RETURNING *",
-            [title, target_amount, target_date, saved_amount, id]
-        );
-        
-        if (updatedGoal.rows.length === 0) {
-            return res.status(404).json({ error: "Goal not found" });
-        }
-        res.json(updatedGoal.rows[0]);
-    } catch (err) {
-        console.error("Error updating goal fully:", err.message);
-        res.status(500).send("Server Error");
+    const updatedGoal = await pool.query(
+      "UPDATE goals SET title = $1, target_amount = $2, target_date = $3, saved_amount = $4 WHERE id = $5 RETURNING *",
+      [title, target_amount, target_date, saved_amount, id]
+    );
+
+    if (updatedGoal.rows.length === 0) {
+      return res.status(404).json({ error: "Goal not found" });
     }
+    res.json(updatedGoal.rows[0]);
+  } catch (err) {
+    console.error("Error updating goal fully:", err.message);
+    res.status(500).send("Server Error");
+  }
 });
 
 // PUT (Incremental): Add money to an existing goal
 app.put('/goals/:id/add', async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        // Flexible extraction handles both "amount" and "add_amount"
-        const amountToAdd = req.body.amount || req.body.add_amount;
-        
-        if (!amountToAdd || isNaN(amountToAdd)) {
-            return res.status(400).json({ error: "Valid amount is required" });
-        }
+  try {
+    const { id } = req.params;
 
-        const updatedGoal = await pool.query(
-            "UPDATE goals SET saved_amount = saved_amount + $1 WHERE id = $2 RETURNING *",
-            [amountToAdd, id]
-        );
-        
-        if (updatedGoal.rows.length === 0) {
-            return res.status(404).json({ error: "Goal not found" });
-        }
-        res.json(updatedGoal.rows[0]);
-    } catch (err) {
-        console.error("Error adding to goal:", err.message);
-        res.status(500).send("Server Error");
+    // Flexible extraction handles both "amount" and "add_amount"
+    const amountToAdd = req.body.amount || req.body.add_amount;
+
+    if (!amountToAdd || isNaN(amountToAdd)) {
+      return res.status(400).json({ error: "Valid amount is required" });
     }
+
+    const updatedGoal = await pool.query(
+      "UPDATE goals SET saved_amount = saved_amount + $1 WHERE id = $2 RETURNING *",
+      [amountToAdd, id]
+    );
+
+    if (updatedGoal.rows.length === 0) {
+      return res.status(404).json({ error: "Goal not found" });
+    }
+    res.json(updatedGoal.rows[0]);
+  } catch (err) {
+    console.error("Error adding to goal:", err.message);
+    res.status(500).send("Server Error");
+  }
 });
 
 // Start the server
 app.listen(PORT, () => {
-    console.log(`Server has started on http://localhost:${PORT}`);
+  console.log(`Server has started on http://localhost:${PORT}`);
 });
